@@ -78,6 +78,8 @@ users.post("/", async (req, res, next) => {
           res
             .status(200)
             .cookie("token", refreshToken, {
+              sameSite: "none",
+              secure: true,
               httpOnly: true,
             })
             .json({
