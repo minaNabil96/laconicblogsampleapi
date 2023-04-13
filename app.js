@@ -34,7 +34,16 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(
   cors({
     credentials: true,
-    origin: true | ["https://laconic-blogsample.vercel.app/"],
+    origin:
+      true |
+      [
+        "https://laconic-blogsample.vercel.app/",
+        "https://laconic-blogsample.vercel.app",
+        "https://laconic-blogsample-git-main-minanabil96.vercel.app/",
+        "https://laconic-blogsample-git-main-minanabil96.vercel.app",
+        "https://laconic-blogsample-dcygog4ic-minanabil96.vercel.app/",
+        "https://laconic-blogsample-dcygog4ic-minanabil96.vercel.app",
+      ],
     allowedHeaders: [
       "content-type ",
       "access-control-allow-origin",
