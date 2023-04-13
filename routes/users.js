@@ -15,6 +15,7 @@ users.use(
 
     httpOnly: true,
     sameSite: "none",
+    secure: true,
   })
 );
 
@@ -79,7 +80,7 @@ users.post("/", async (req, res, next) => {
             .cookie("token", refreshToken, {
               httpOnly: true,
               secure: true,
-              sameSite: "none",
+              sameSite: "strict",
             })
             .json({
               status: "matched",
