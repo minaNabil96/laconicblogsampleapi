@@ -341,7 +341,7 @@ users.post("/:adminId", async (req, res, next) => {
 });
 
 // get user info
-users.get("/info", async (req, res, next) => {
+users.post("/info", async (req, res, next) => {
   const token = req.headers.cookie && req.headers.cookie.split("=")[1];
 
   let verifiedUser;
@@ -354,7 +354,7 @@ users.get("/info", async (req, res, next) => {
       process.env.REFRESH_TOKEN_SECRET,
       (err, user) => {
         if (err) {
-          console.log({ status: "you don't have access" });
+          console.log({ status: "you don't have accessaa" });
         }
         return (verifiedUser = user);
       }
