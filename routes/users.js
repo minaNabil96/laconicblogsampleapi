@@ -341,7 +341,7 @@ users.post("/:adminId", async (req, res, next) => {
 });
 
 // get user info
-users.post("/info", async (req, res, next) => {
+users.get("/info", async (req, res, next) => {
   const token = req.headers.cookie && req.headers.cookie.split("=")[1];
 
   let verifiedUser;
