@@ -79,8 +79,6 @@ users.post("/", async (req, res, next) => {
             .status(200)
             .cookie("token", refreshToken, {
               httpOnly: true,
-              secure: true,
-              sameSite: "strict",
             })
             .json({
               status: "matched",
