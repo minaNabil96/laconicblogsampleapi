@@ -142,6 +142,7 @@ posts.put("/:id", async (req, res, next) => {
         const post = await postsSchema.findOneAndUpdate(
           { _id: postId },
           {
+            image,
             section,
             title,
             body,
