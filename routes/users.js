@@ -22,7 +22,7 @@ users.use(
 // log out
 users.post("/logOut", async (req, res, next) => {
   const token = req.headers.cookie && req.headers.cookie.split("=")[1];
-  console.log(token);
+
   try {
     res.clearCookie("token");
     res.status(200).json({ status: "success" });

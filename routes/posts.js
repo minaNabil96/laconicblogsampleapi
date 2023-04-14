@@ -87,7 +87,7 @@ posts.put("/:id", async (req, res, next) => {
   const { text, image, title, author, body, date, section } = req.body;
   const postId = req.params.id;
   const token = req.headers.cookie && req.headers.cookie.split("=")[1];
-
+  console.log({ image, section });
   let verefiedUser;
   // console.log(`section : ${section} author : ${author} image : ${image} title : ${title}
   // body : ${body} text : ${text} `);
@@ -111,159 +111,130 @@ posts.put("/:id", async (req, res, next) => {
     res.status(401).json({ status: "you don't have access" });
   }
   try {
-    if (image) {
-      if (section && !title) {
-        const post = await postsSchema.findOneAndUpdate(
-          { _id: postId },
-          {
-            image,
-            section,
-            body,
-            text,
-          },
-          { new: true }
-        );
-        post.save();
-        res.status(200).json({ status: "success", post });
-      } else if (title && !section) {
-        const post = await postsSchema.findOneAndUpdate(
-          { _id: postId },
-          {
-            image,
-            title,
-            body,
-            text,
-          },
-          { new: true }
-        );
-        post.save();
-        res.status(200).json({ status: "success", post });
-      } else if (section && title && text) {
-        const post = await postsSchema.findOneAndUpdate(
-          { _id: postId },
-          {
-            image,
-            section,
-            title,
-            body,
-            text,
-          },
-          { new: true }
-        );
-        post.save();
-        res.status(200).json({ status: "success", post });
-      } else if (!section && !title) {
-        const post = await postsSchema.findOneAndUpdate(
-          { _id: postId },
-          {
-            image,
-            body,
-            text,
-          },
-          { new: true }
-        );
-        post.save();
-        res.status(200).json({ status: "success", post });
-      }
+    const obj1 = { text, image, title, author, body, date, section };
+    const obj2 = Object.entries(obj1).filter(([, value]) => value !== "");
+    const obj3 = Object.fromEntries(obj2);
+
+    if (obj3) {
+      const post = await postsSchema.findOneAndUpdate({ _id: postId }, obj3, {
+        new: true,
+      });
+      post.save();
+      res.status(200).json({ status: "success", post });
     }
-    // end if there's an image
-    if (!image) {
-      if (title && section) {
-        const post = await postsSchema.findOneAndUpdate(
-          { _id: postId },
-          {
-            title,
-            section,
-            body,
-            text,
-          },
-          { new: true }
-        );
-        post.save();
-        res.status(200).json({ status: "success", post });
-      } else if (section && !title) {
-        const post = await postsSchema.findOneAndUpdate(
-          { _id: postId },
-          {
-            section,
-            body,
-            text,
-          },
-          { new: true }
-        );
-        post.save();
-        res.status(200).json({ status: "success", post });
-      } else if (!section && title) {
-        const post = await postsSchema.findOneAndUpdate(
-          { _id: postId },
-          {
-            section,
-            body,
-            text,
-          },
-          { new: true }
-        );
-        post.save();
-        res.status(200).json({ status: "success", post });
-      } else if (section && title && text) {
-        const post = await postsSchema.findOneAndUpdate(
-          { _id: postId },
-          {
-            section,
-            title,
-            body,
-            text,
-          },
-          { new: true }
-        );
-        post.save();
-        res.status(200).json({ status: "success", post });
-      }
-    }
-    // const post = await postsSchema.findOneAndUpdate(
-    //   { _id: postId },
-    //   {
-    //     section,
-    //     body,
-    //     text,
-    //     title,
-    //     image,
-    //   },
-    //   { new: true }
-    // );
-    // post.save();
-    // res.status(200).json(post);
-    // if there's image
-    // end if there's image
+    // if (image) {
+    //   if (section && !title) {
+    //     const post = await postsSchema.findOneAndUpdate(
+    //       { _id: postId },
+    //       {
+    //         image,
+    //         section,
+    //         body,
+    //         text,
+    //       },
+    //       { new: true }
+    //     );
+    //     post.save();
+    //     res.status(200).json({ status: "success", post });
+    //   } else if (title && !section) {
+    //     const post = await postsSchema.findOneAndUpdate(
+    //       { _id: postId },
+    //       {
+    //         image,
+    //         title,
+    //         body,
+    //         text,
+    //       },
+    //       { new: true }
+    //     );
+    //     post.save();
+    //     res.status(200).json({ status: "success", post });
+    //   } else if (section && title && text) {
+    //     const post = await postsSchema.findOneAndUpdate(
+    //       { _id: postId },
+    //       {
+    //         image,
+    //         section,
+    //         title,
+    //         body,
+    //         text,
+    //       },
+    //       { new: true }
+    //     );
+    //     post.save();
+    //     res.status(200).json({ status: "success", post });
+    //   } else if (!section && !title) {
+    //     const post = await postsSchema.findOneAndUpdate(
+    //       { _id: postId },
+    //       {
+    //         image,
+    //         body,
+    //         text,
+    //       },
+    //       { new: true }
+    //     );
+    //     post.save();
+    //     res.status(200).json({ status: "success", post });
+    //   }
+    // }
+    // // end if there's an image
+    // if (!image) {
+    //   if (title && section) {
+    //     const post = await postsSchema.findOneAndUpdate(
+    //       { _id: postId },
+    //       {
+    //         title,
+    //         section,
+    //         body,
+    //         text,
+    //       },
+    //       { new: true }
+    //     );
+    //     post.save();
+    //     res.status(200).json({ status: "success", post });
+    //   } else if (section && !title) {
+    //     const post = await postsSchema.findOneAndUpdate(
+    //       { _id: postId },
+    //       {
+    //         section,
+    //         body,
+    //         text,
+    //       },
+    //       { new: true }
+    //     );
+    //     post.save();
+    //     res.status(200).json({ status: "success", post });
+    //   } else if (!section && title) {
+    //     const post = await postsSchema.findOneAndUpdate(
+    //       { _id: postId },
+    //       {
+    //         section,
+    //         body,
+    //         text,
+    //       },
+    //       { new: true }
+    //     );
+    //     post.save();
+    //     res.status(200).json({ status: "success", post });
+    //   } else if (section && title && text) {
+    //     const post = await postsSchema.findOneAndUpdate(
+    //       { _id: postId },
+    //       {
+    //         section,
+    //         title,
+    //         body,
+    //         text,
+    //       },
+    //       { new: true }
+    //     );
+    //     post.save();
+    //     res.status(200).json({ status: "success", post });
+    //   }
+    // }
   } catch (error) {
     console.log(error.message);
     res.status(403).json({ status: "failed to update" });
   }
-
-  // const post = await postsSchema.findOneAndUpdate(
-  //   { _id: postId },
-  //   {
-  //     text,
-  //     image,
-  //     title,
-  //     author,
-  //     body,
-  //     date,
-  //     section,
-  //   },
-  //   { new: true }
-  // );
-
-  // .then((data) => {
-  //   post.save(data);
-  //   res.status(200).send(data);
-  // })
-  // .catch((err) => {
-  //   console.log(err);
-  // });
-  // const post = await new this.Post(req.body);
-
-  // res.send(post);
 });
 // send all posts
 posts.get("/", async (req, res, next) => {
@@ -423,7 +394,7 @@ posts.get("/sections/:id", async (req, res, next) => {
     .limit(limit);
 
   try {
-    if (!posts) {
+    if (!posts || posts.length === 0) {
       res.status(200).json({ status: "there's no articles" });
     } else {
       res

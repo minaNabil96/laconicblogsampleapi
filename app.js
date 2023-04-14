@@ -43,6 +43,8 @@ app.use(
         "https://laconic-blogsample-git-main-minanabil96.vercel.app",
         "https://laconic-blogsample-dcygog4ic-minanabil96.vercel.app/",
         "https://laconic-blogsample-dcygog4ic-minanabil96.vercel.app",
+        // "http://192.168.1.5:3000/",
+        // "http://192.168.1.5:3000",
       ],
     allowedHeaders: [
       "content-type ",
