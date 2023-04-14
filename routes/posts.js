@@ -408,6 +408,7 @@ posts.get("/sections/:id", async (req, res, next) => {
   const skip = (page - 1) * limit;
   const numOfDocuments = await postsSchema.countDocuments({
     section: sectionId,
+    visible: true,
   });
   const numOfPages = Math.ceil(numOfDocuments / limit);
   const endIdx = page * limit;
