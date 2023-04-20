@@ -7,7 +7,10 @@ const sectionsSchema = new mongoose.Schema(
     desc: { type: String, required: true },
     image: { type: String, required: true },
     visible: { type: Boolean, default: true },
-    date: { type: Date, default: Date.now },
+    date: {
+      type: String,
+      default: new Date(),
+    },
   },
   { timestamps: true }
 );

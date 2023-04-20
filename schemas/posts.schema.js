@@ -7,7 +7,10 @@ const postsSchema = new mongoose.Schema(
     author: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
     body: { type: Array },
     visible: { type: Boolean, default: true },
-    date: { type: Date },
+    date: {
+      type: String,
+      default: new Date(),
+    },
     section: [{ type: mongoose.Schema.Types.ObjectId, ref: "sections" }],
     // id: { type: String },
   },

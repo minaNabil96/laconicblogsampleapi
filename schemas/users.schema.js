@@ -7,7 +7,10 @@ const usersSchema = new mongoose.Schema(
     arabicname: { type: String, requierd: true, unique: true },
     admin: { type: Boolean, default: false },
     isSuper: { type: Boolean, default: false },
-    date: { type: Date, default: Date.now },
+    date: {
+      type: String,
+      default: new Date(),
+    },
   },
   { timestamps: true }
 );
