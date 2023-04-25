@@ -87,7 +87,6 @@ posts.put("/:id", async (req, res, next) => {
   const { text, image, title, author, body, date, section } = req.body;
   const postId = req.params.id;
   const token = req.headers.cookie && req.headers.cookie.split("=")[1];
-  console.log({ image, section });
   let verefiedUser;
   // console.log(`section : ${section} author : ${author} image : ${image} title : ${title}
   // body : ${body} text : ${text} `);
@@ -111,7 +110,7 @@ posts.put("/:id", async (req, res, next) => {
     res.status(401).json({ status: "you don't have access" });
   }
   try {
-    const obj1 = { text, image, title, author, body, date, section };
+    const obj1 = { text, image, title, body, date, section };
     const obj2 = Object.entries(obj1).filter(([, value]) => value !== "");
     const obj3 = Object.fromEntries(obj2);
 
