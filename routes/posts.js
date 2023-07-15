@@ -251,7 +251,7 @@ posts.get("/", async (req, res, next) => {
     .find({ visible: true })
     .populate({ path: "section" })
     .populate({ path: "author", select: "-password" })
-    .sort({ date: -1 })
+    .sort({ date: +1 })
     .skip(skip)
     .limit(limit);
 
@@ -299,7 +299,7 @@ posts.get("/user-articles", async (req, res, next) => {
       .find({ author: verefiedUser, visible: true })
       .populate({ path: "section" })
       .populate({ path: "author", select: "-password" })
-      .sort({ date: -1 })
+      .sort({ date: +1 })
 
       .then((data) => {
         res.status(200).json(data);
@@ -349,13 +349,13 @@ posts.post("/all-user-articles", async (req, res, next) => {
           .find({ author: userId })
           .populate({ path: "section" })
           .populate({ path: "author" })
-          .sort({ date: -1 });
+          .sort({ date: +1 });
 
         const invisiblePosts = await postsSchema
           .find({ author: userId, visible: false })
           .populate({ path: "section" })
           .populate({ path: "author" })
-          .sort({ date: -1 });
+          .sort({ date: +1 });
 
         if (posts || invisiblePosts) {
           res.status(200).json({ posts, invisiblePosts });
@@ -388,7 +388,7 @@ posts.get("/sections/:id", async (req, res, next) => {
 
   const posts = await postsSchema
     .find({ section: sectionId, visible: true })
-    .sort({ date: -1 })
+    .sort({ date: +1 })
     .skip(skip)
     .limit(limit);
 
@@ -449,7 +449,7 @@ posts.get("/:id", async (req, res, next) => {
 
   const latestThree = await postsSchema
     .find({ author: _id })
-    .sort({ date: -1 })
+    .sort({ date: +1 })
     .limit(3)
     .select("_id title");
 
