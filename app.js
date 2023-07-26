@@ -1,25 +1,26 @@
-var createError = require("http-errors");
-var express = require("express");
-var cookieParser = require("cookie-parser");
+const createError = require("http-errors");
+const express = require("express");
+const cookieParser = require("cookie-parser");
 
-var path = require("path");
-var cookieSession = require("cookie-session");
-var Keygrip = require("keygrip");
-var logger = require("morgan");
-var cors = require("cors");
-
+const path = require("path");
+const cookieSession = require("cookie-session");
+const Keygrip = require("keygrip");
+const logger = require("morgan");
+const cors = require("cors");
+const ErrorApi = require("./helpers/ErrorApi");
+const globalErrorHandler = require("./middlewares/globalErrorHandler");
 // mongoose connection file
-var connection = require("./connection");
+const connection = require("./connection");
 
 // schemas
-var postsSchema = require("./schemas/posts.schema");
+const postsSchema = require("./schemas/posts.schema");
 
 // routes
-var PostsRouter = require("./routes/posts");
-var IndexRouter = require("./routes/Index");
-var SectionsRouter = require("./routes/sections");
-var UsersRouter = require("./routes/users");
-var app = express();
+const PostsRouter = require("./routes/posts");
+const IndexRouter = require("./routes/Index");
+const SectionsRouter = require("./routes/sections");
+const UsersRouter = require("./routes/users");
+const app = express();
 
 // // view engine setup
 // app.set("views", path.join(__dirname, "views"));
@@ -45,6 +46,9 @@ app.use(
         "https://laconic-blogsample-dcygog4ic-minanabil96.vercel.app",
         // "http://192.168.1.7:3000/",
         // "http://192.168.1.7:3000",
+        "https://mina-nabil-portfolio.vercel.app/",
+        "https://mina-nabil-portfolio-minanabil96.vercel.app/",
+        "https://mina-nabil-portfolio-git-main-minanabil96.vercel.app/",
       ],
     allowedHeaders: [
       "content-type ",
@@ -60,22 +64,15 @@ app.use("/posts", PostsRouter);
 app.use("/", IndexRouter);
 app.use("/sections", SectionsRouter);
 app.use("/users", UsersRouter);
-// catch 404 and forward to error handler
-app.use("*", function (req, res, next) {
-  next(createError(404));
+
+app.all("*", function (req, res, next) {
+  const err = new ErrorApi(
+    `sorry can't find this route: ${req.originalUrl}`,
+    404
+  );
+  next(err);
 });
 
-// post requste for posts
-
-// error handler
-app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
-  console.log(err.message);
-  // render the error page
-  res.status(err.status || 500);
-  res.json(err);
-});
+app.use(globalErrorHandler);
 
 module.exports = app;
