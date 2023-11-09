@@ -1,12 +1,12 @@
-var express = require("express");
+const express = require("express");
 require("dotenv").config();
-var jwt = require("jsonwebtoken");
-var cookieParser = require("cookie-parser");
-var cookie = require("cookie");
-
-var posts = express.Router();
-var postsSchema = require("../schemas/posts.schema");
-var usersSchema = require("../schemas/users.schema");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const cookie = require("cookie");
+const { arabicFullDate } = require("../helpers/setOfHelpers");
+const posts = express.Router();
+const postsSchema = require("../schemas/posts.schema");
+const usersSchema = require("../schemas/users.schema");
 
 /* GET Posts listing. */
 // posts.get("/", (req, res, next) => {
@@ -37,9 +37,11 @@ posts.get("/search", async (req, res, next) => {
 });
 // add post
 posts.post("/", async (req, res, next) => {
+  const { text, image, title, author, body, section } = req.body;
+
   const token = req.headers.cookie && req.headers.cookie.split("=")[1];
   let verefiedUser;
-
+  let date = await arabicFullDate();
   if (!token) {
     res.json({ status: "wrong token" }).status(401);
   } else {
@@ -51,31 +53,31 @@ posts.post("/", async (req, res, next) => {
           console.log({ status: "you don't have access" });
         }
         return (verefiedUser = user);
-      }
+      },
     );
   }
   if (!verefiedUser) {
     res.status(401).json({ status: "failed" });
-  }
-  const { text, image, title, author, body, date, section } = req.body;
-  const post = new postsSchema({
-    text,
-    image,
-    title,
-    author,
-    body,
-    date,
-    section,
-  });
-  await post
-    .save()
-    .then((post) => {
-      res.status(200).json([post, { status: "success" }]);
-    })
-    .catch((err) => {
-      console.log(err.message);
-      res.status(403).json({ status: "failed" });
+  } else {
+    const post = new postsSchema({
+      text,
+      image,
+      title,
+      author,
+      body,
+      date,
+      section,
     });
+    await post
+      .save()
+      .then((post) => {
+        res.status(200).json([post, { status: "success" }]);
+      })
+      .catch((err) => {
+        console.log(err.message);
+        res.status(403).json({ status: "failed" });
+      });
+  }
 
   // const post = await new this.Post(req.body);
 
@@ -102,7 +104,7 @@ posts.put("/:id", async (req, res, next) => {
           res.json({ status: "you don't have access" });
         }
         return (verefiedUser = user);
-      }
+      },
     );
   }
 
@@ -238,24 +240,25 @@ posts.put("/:id", async (req, res, next) => {
 // send all posts
 posts.get("/", async (req, res, next) => {
   // const { section } = req.body;
-  let page = parseInt(req.query.page) || 1;
-  let limit = parseInt(req.query.limit) || 3;
-  const skip = (page - 1) * limit;
-  const numOfDocuments = await postsSchema.countDocuments({ visible: true });
-  const numOfPages = Math.ceil(numOfDocuments / limit);
-  const endIdx = page * limit;
-  const nextPage = endIdx < numOfDocuments ? page + 1 : "nonext";
-  const prevPage = skip > 0 ? page - 1 : "noprev";
-
-  const posts = await postsSchema
-    .find({ visible: true })
-    .populate({ path: "section" })
-    .populate({ path: "author", select: "-password" })
-    .sort({ date: +1 })
-    .skip(skip)
-    .limit(limit);
 
   try {
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 3;
+
+    const skip = (page - 1) * limit;
+    const numOfDocuments = await postsSchema.countDocuments({ visible: true });
+    const numOfPages = Math.ceil(numOfDocuments / limit);
+    const endIdx = page * limit;
+    const nextPage = endIdx < numOfDocuments ? page + 1 : "nonext";
+    const prevPage = skip > 0 ? page - 1 : "noprev";
+
+    const posts = await postsSchema
+      .find({ visible: true })
+      .populate({ path: "section" })
+      .populate({ path: "author", select: "-password" })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
     if (!posts) {
       res.status(200).json({ status: "there's no articles" });
     } else {
@@ -269,10 +272,9 @@ posts.get("/", async (req, res, next) => {
 });
 
 // get posts by userlogin
-posts.get("/user-articles", async (req, res, next) => {
+posts.post("/user-articles", async (req, res, next) => {
   // const token = req.headers["authorization"];
   const token = req.headers.cookie && req.headers.cookie.split("=")[1];
-
   let verefiedUser;
 
   if (!token) {
@@ -286,7 +288,7 @@ posts.get("/user-articles", async (req, res, next) => {
         console.log({ status: "you don't have access" });
       }
       return (verefiedUser = user);
-    }
+    },
   );
 
   if (token && !verefiedUser) {
@@ -299,7 +301,7 @@ posts.get("/user-articles", async (req, res, next) => {
       .find({ author: verefiedUser, visible: true })
       .populate({ path: "section" })
       .populate({ path: "author", select: "-password" })
-      .sort({ date: +1 })
+      .sort({ createdAt: -1 })
 
       .then((data) => {
         res.status(200).json(data);
@@ -331,7 +333,7 @@ posts.post("/all-user-articles", async (req, res, next) => {
           console.log({ status: "you don't have access" });
         }
         return (verefiedUser = user);
-      }
+      },
     );
 
     if (token && !verefiedUser) {
@@ -349,13 +351,13 @@ posts.post("/all-user-articles", async (req, res, next) => {
           .find({ author: userId })
           .populate({ path: "section" })
           .populate({ path: "author" })
-          .sort({ date: +1 });
+          .sort({ createdAt: -1 });
 
         const invisiblePosts = await postsSchema
           .find({ author: userId, visible: false })
           .populate({ path: "section" })
           .populate({ path: "author" })
-          .sort({ date: +1 });
+          .sort({ createdAt: -1 });
 
         if (posts || invisiblePosts) {
           res.status(200).json({ posts, invisiblePosts });
@@ -373,27 +375,29 @@ posts.post("/all-user-articles", async (req, res, next) => {
 
 // get all posts in one section
 posts.get("/sections/:id", async (req, res, next) => {
-  const sectionId = req.params.id;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 3;
-  const skip = (page - 1) * limit;
-  const numOfDocuments = await postsSchema.countDocuments({
-    section: sectionId,
-    visible: true,
-  });
-  const numOfPages = Math.ceil(numOfDocuments / limit);
-  const endIdx = page * limit;
-  const nextPage = endIdx < numOfDocuments ? page + 1 : "nonext";
-  const prevPage = skip > 0 ? page - 1 : "noprev";
-
-  const posts = await postsSchema
-    .find({ section: sectionId, visible: true })
-    .sort({ date: +1 })
-    .skip(skip)
-    .limit(limit);
-
   try {
-    if (!posts || posts.length === 0) {
+    const sectionId = req.params.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 3;
+    const skip = (page - 1) * limit;
+    const numOfDocuments = await postsSchema.countDocuments({
+      section: sectionId,
+      visible: true,
+    });
+    const numOfPages = Math.ceil(numOfDocuments / limit);
+    const endIdx = page * limit;
+    const nextPage = endIdx < numOfDocuments ? page + 1 : "nonext";
+    const prevPage = skip > 0 ? page - 1 : "noprev";
+
+    const posts = await postsSchema
+      .find({ section: sectionId, visible: true })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({ path: "section" });
+
+    if (posts.length < 1) {
+      console.log({ posts });
       res.status(200).json({ status: "there's no articles" });
     } else {
       res
@@ -451,7 +455,7 @@ posts.get("/:id", async (req, res, next) => {
     .find({ author: _id })
     .sort({ date: +1 })
     .limit(3)
-    .select("_id title");
+    .select("_id title image");
 
   try {
     res.status(200).json({ matched, latestThree, related });
@@ -508,51 +512,45 @@ posts.get("/nppost/:id", async (req, res, next) => {
 });
 
 posts.post("/delete-article/:id", async (req, res, next) => {
-  const PostId = req.params.id;
-  const token = req.headers.cookie && req.headers.cookie.split("=")[1];
-  let verefiedUser;
-  if (!PostId) {
-    res.status(403).json({ status: "error" });
+  try {
+    const PostId = req.params.id;
+    const token = req.headers.cookie && req.headers.cookie.split("=")[1];
+    let verefiedUser;
+    if (!PostId) {
+      res.status(403).json({ status: "error" });
+    }
+    if (!token) {
+      res.json({ status: "wrong token" }).status(401);
+    } else {
+      const verified = await jwt.verify(
+        token,
+        process.env.REFRESH_TOKEN_SECRET,
+        (err, user) => {
+          if (err) {
+            console.log({ status: "you don't have access" });
+          }
+          return (verefiedUser = user);
+        },
+      );
+    }
+    if (!verefiedUser) {
+      res.status(401).json({ status: "you don't have access" });
+    }
+    if (verefiedUser) {
+      const post = await postsSchema
+        .findByIdAndUpdate({ _id: PostId }, { visible: false }, { new: true })
+        .then((post) => {
+          res.status(200).json({ status: "deleted" });
+        })
+        .catch((err) => {
+          console.log(err.message);
+          res.status(403).json({ status: "failed" });
+        });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(403).json({ error });
   }
-  if (!token) {
-    res.json({ status: "wrong token" }).status(401);
-  } else {
-    const verified = await jwt.verify(
-      token,
-      process.env.REFRESH_TOKEN_SECRET,
-      (err, user) => {
-        if (err) {
-          console.log({ status: "you don't have access" });
-        }
-        return (verefiedUser = user);
-      }
-    );
-  }
-  if (!verefiedUser) {
-    res.status(401).json({ status: "you don't have access" });
-  }
-  if (verefiedUser) {
-    const post = await postsSchema
-      .findByIdAndUpdate({ _id: PostId }, { visible: false }, { new: true })
-      .then((post) => {
-        res.status(200).json({ status: "deleted" });
-      })
-      .catch((err) => {
-        console.log(err.message);
-        res.status(403).json({ status: "failed" });
-      });
-  }
-
-  // .then((data) => {
-  //   if (data) {
-  //     post.save(data);
-  //   res.status(200).json({status:"deleted"});
-  //   }
-  // })
-  // .catch((err) => {
-
-  //   res.status(404);
-  // });
 });
 
 // delete all articles by one user id
@@ -577,7 +575,7 @@ posts.post("/deleteall/:adminId", async (req, res, next) => {
           console.log({ status: "you don't have access" });
         }
         return (verefiedUser = user);
-      }
+      },
     );
 
     if (!verefiedUser) {
@@ -598,7 +596,7 @@ posts.post("/deleteall/:adminId", async (req, res, next) => {
       const deleted = await postsSchema.updateMany(
         { author: userId },
         { visible: false },
-        { new: true }
+        { new: true },
       );
       if (deleted) {
         res.status(200).json({ status: "delete success" });
@@ -654,7 +652,7 @@ posts.post("/deleteforadmin/:adminId", async (req, res, next) => {
           console.log({ status: "you don't have access" });
         }
         return (verefiedUser = user);
-      }
+      },
     );
 
     if (verefiedUser) {
@@ -667,7 +665,7 @@ posts.post("/deleteforadmin/:adminId", async (req, res, next) => {
       const deleted = await postsSchema.findByIdAndUpdate(
         { _id: postId },
         { visible: false },
-        { new: true }
+        { new: true },
       );
 
       if (deleted) {
@@ -704,7 +702,7 @@ posts.post("/retrieveforadmin/:adminId", async (req, res, next) => {
           console.log({ status: "you don't have access" });
         }
         return (verefiedUser = user);
-      }
+      },
     );
 
     if (verefiedUser) {
@@ -717,7 +715,7 @@ posts.post("/retrieveforadmin/:adminId", async (req, res, next) => {
       const retrieved = await postsSchema.findByIdAndUpdate(
         { _id: postId },
         { visible: true },
-        { new: true }
+        { new: true },
       );
 
       if (retrieved) {

@@ -1,11 +1,11 @@
 require("dotenv").config();
-var cookieSession = require("cookie-session");
-var express = require("express");
-var bcrypt = require("bcrypt");
-var jwt = require("jsonwebtoken");
-
-var users = express.Router();
-var usersSchema = require("../schemas/users.schema");
+const cookieSession = require("cookie-session");
+const express = require("express");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { arabicFullDate } = require("../helpers/setOfHelpers");
+const users = express.Router();
+const usersSchema = require("../schemas/users.schema");
 
 // login cheker
 users.use(
@@ -16,7 +16,7 @@ users.use(
     httpOnly: true,
     sameSite: "none",
     secure: true,
-  })
+  }),
 );
 
 // log out
@@ -35,81 +35,89 @@ users.post("/logOut", async (req, res, next) => {
 
 //  login
 users.post("/", async (req, res, next) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    res.status(401).json({ status: "please enter your login info first" });
-  }
-  const userMatch = await usersSchema.findOne({
-    username: username,
-  });
-  // if (username && password) {
-  //   const comparedPassword = await bcrypt.compare(password, userMatch.password);
-  // }
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      res.status(401).json({ status: "please enter your login info first" });
+    } else {
+      const userMatch = await usersSchema.findOne({
+        username: username,
+      });
+      // if (username && password) {
+      //   const comparedPassword = await bcrypt.compare(password, userMatch.password);
+      // }
 
-  if (!userMatch) {
-    res.status(200).json({ status: "wrong username or password" });
-  } else if (userMatch) {
-    try {
-      const comparedPassword = await bcrypt.compare(
-        password,
-        userMatch.password
-      );
-      if (comparedPassword === false) {
+      if (!userMatch) {
         res.status(200).json({ status: "wrong username or password" });
-      } else if (comparedPassword === true) {
-        const { username, arabicname } = userMatch;
-        // const userObj = { username, arabicname };
-        let convertFromMongoose = await userMatch.toJSON();
+      } else {
+        try {
+          const comparedPassword = await bcrypt.compare(
+            password,
+            userMatch.password,
+          );
+          if (comparedPassword === false) {
+            res.status(200).json({ status: "wrong username or password" });
+          } else if (comparedPassword === true) {
+            const { username, arabicname } = userMatch;
+            // const userObj = { username, arabicname };
+            let convertFromMongoose = await userMatch.toJSON();
 
-        let accessToken = jwt.sign(
-          convertFromMongoose,
-          process.env.ACCESS_TOKEN_SECRET,
-          {
-            expiresIn: "60s",
+            let accessToken = jwt.sign(
+              convertFromMongoose,
+              process.env.ACCESS_TOKEN_SECRET,
+              {
+                expiresIn: "60s",
+              },
+            );
+            let refreshToken = jwt.sign(
+              convertFromMongoose,
+              process.env.REFRESH_TOKEN_SECRET,
+            );
+            if (accessToken && refreshToken) {
+              // .setHeader("Set-Cookie", refreshToken, "Access-Control-Allow-Origin", "*")
+
+              res
+                .status(200)
+                .cookie("token", refreshToken, {
+                  sameSite: "none",
+                  secure: true,
+                  httpOnly: true,
+                })
+                .json({
+                  status: "matched",
+                  username: userMatch.username,
+                  admin: userMatch.admin,
+                  isSuper: userMatch.isSuper,
+                  accessToken: accessToken,
+                  userId: userMatch._id,
+                  arabicname: userMatch.arabicname,
+                });
+              // .cookie("token", refreshToken, {
+              //   httpOnly: true,
+              // })
+            } else if (!accessToken || !refreshToken) {
+              res.status(401).json({ status: "you don't have access" });
+            }
           }
-        );
-        let refreshToken = jwt.sign(
-          convertFromMongoose,
-          process.env.REFRESH_TOKEN_SECRET
-        );
-        if (accessToken && refreshToken) {
-          // .setHeader("Set-Cookie", refreshToken, "Access-Control-Allow-Origin", "*")
-
-          res
-            .status(200)
-            .cookie("token", refreshToken, {
-              sameSite: "none",
-              secure: true,
-              httpOnly: true,
-            })
-            .json({
-              status: "matched",
-              username: userMatch.username,
-              admin: userMatch.admin,
-              isSuper: userMatch.isSuper,
-              accessToken: accessToken,
-            });
-          // .cookie("token", refreshToken, {
-          //   httpOnly: true,
-          // })
-        } else if (!accessToken || !refreshToken) {
-          res.status(401).json({ status: "you don't have access" });
+        } catch (error) {
+          console.log(error.message);
+          res.status(404).json(error.message);
         }
       }
-    } catch (error) {
-      console.log(error.message);
-      res.status(404).json(error.message);
     }
+  } catch (error) {
+    console.log(error.message);
+    res.status(404).json(error.message);
   }
 });
 
 // add users simple signup, not the final
 users.post("/adduser", async (req, res, next) => {
-  const { username, password, date, arabicname, admin, isSuper } = req.body;
+  const { username, password, arabicname, admin, isSuper } = req.body;
   if (!username || !password || !arabicname) {
     res.status(401).json({ status: "please enter your full info first" });
   }
-
+  const date = await arabicFullDate();
   const userMatch = await usersSchema.findOne({
     username: { $eq: username },
   });
@@ -215,7 +223,7 @@ users.post("/deleteuser/:adminId", async (req, res, next) => {
           console.log({ status: "you don't have access" });
         }
         return (verefiedUser = user);
-      }
+      },
     );
 
     if (!verefiedUser) {
@@ -279,7 +287,7 @@ users.post("/:adminId", async (req, res, next) => {
         console.log({ status: "you don't have access" });
       }
       return (verefiedUser = user);
-    }
+    },
   );
 
   // if (!verefiedUser) {
@@ -303,7 +311,7 @@ users.post("/:adminId", async (req, res, next) => {
         const edited = await usersSchema.findOneAndUpdate(
           { _id: userId },
           { isSuper: superOrNot },
-          { new: true }
+          { new: true },
         );
         res.status(200).json({ status: "edit info success" });
       } else if (
@@ -321,14 +329,14 @@ users.post("/:adminId", async (req, res, next) => {
           const edited = await usersSchema.findOneAndUpdate(
             { _id: userIdFromFormm },
             objectWithPass,
-            { new: true }
+            { new: true },
           );
           res.status(200).json({ status: "edit info success" });
         } else if (!editedMap.includes("password")) {
           const edited = await usersSchema.findOneAndUpdate(
             { _id: userIdFromFormm },
             userDataa,
-            { new: true }
+            { new: true },
           );
 
           res.status(200).json({ status: "edit info success" });
@@ -358,7 +366,7 @@ users.get("/info", async (req, res, next) => {
           console.log({ status: "you don't have accessaa" });
         }
         return (verifiedUser = user);
-      }
+      },
     );
   }
   if (verifiedUser) {

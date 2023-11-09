@@ -38,17 +38,8 @@ app.use(
     origin:
       true |
       [
-        "https://laconic-blogsample.vercel.app/",
-        "https://laconic-blogsample.vercel.app",
-        "https://laconic-blogsample-git-main-minanabil96.vercel.app/",
-        "https://laconic-blogsample-git-main-minanabil96.vercel.app",
-        "https://laconic-blogsample-dcygog4ic-minanabil96.vercel.app/",
-        "https://laconic-blogsample-dcygog4ic-minanabil96.vercel.app",
-        // "http://192.168.1.7:3000/",
-        // "http://192.168.1.7:3000",
-        "https://mina-nabil-portfolio.vercel.app/",
-        "https://mina-nabil-portfolio-minanabil96.vercel.app/",
-        "https://mina-nabil-portfolio-git-main-minanabil96.vercel.app/",
+        "https://minanabil96.github.io/my-portfolio/",
+        "https://minanabil96.github.io/fullblog/",
       ],
     allowedHeaders: [
       "content-type ",
@@ -56,7 +47,7 @@ app.use(
       "access-control-allow-credentials",
       "Set-Cookie",
     ],
-  })
+  }),
 );
 
 // use routes
@@ -68,7 +59,7 @@ app.use("/users", UsersRouter);
 app.all("*", function (req, res, next) {
   const err = new ErrorApi(
     `sorry can't find this route: ${req.originalUrl}`,
-    404
+    404,
   );
   next(err);
 });
