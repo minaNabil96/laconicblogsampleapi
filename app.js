@@ -39,7 +39,9 @@ app.use(
       true |
       [
         "https://minanabil96.github.io/my-portfolio/",
+        "https://minanabil96.github.io/my-portfolio",
         "https://minanabil96.github.io/fullblog/",
+        "https://minanabil96.github.io/fullblog",
       ],
     allowedHeaders: [
       "content-type ",
