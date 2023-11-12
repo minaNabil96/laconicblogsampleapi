@@ -37,48 +37,52 @@ posts.get("/search", async (req, res, next) => {
 });
 // add post
 posts.post("/", async (req, res, next) => {
-  const { text, image, title, author, body, section } = req.body;
+  try {
+    const { text, image, title, author, body, section } = req.body;
 
-  const token = req.headers.cookie && req.headers.cookie.split("=")[1];
-  let verefiedUser;
-  let date = await arabicFullDate();
-  if (!token) {
-    res.json({ status: "wrong token" }).status(401);
-  } else {
-    const verified = await jwt.verify(
-      token,
-      process.env.REFRESH_TOKEN_SECRET,
-      (err, user) => {
-        if (err) {
-          console.log({ status: "you don't have access" });
-        }
-        return (verefiedUser = user);
-      },
-    );
-  }
-  if (!verefiedUser) {
-    res.status(401).json({ status: "failed" });
-  } else {
-    const post = new postsSchema({
-      text,
-      image,
-      title,
-      author,
-      body,
-      date,
-      section,
-    });
-    await post
-      .save()
-      .then((post) => {
-        res.status(200).json([post, { status: "success" }]);
-      })
-      .catch((err) => {
-        console.log(err.message);
-        res.status(403).json({ status: "failed" });
+    const token = req.headers.cookie && req.headers.cookie.split("=")[1];
+    let verefiedUser;
+    let date = await arabicFullDate();
+    if (!token) {
+      res.json({ status: "wrong token" }).status(401);
+    } else {
+      const verified = await jwt.verify(
+        token,
+        process.env.REFRESH_TOKEN_SECRET,
+        (err, user) => {
+          if (err) {
+            console.log({ status: "you don't have access" });
+          }
+          return (verefiedUser = user);
+        },
+      );
+    }
+    if (!verefiedUser) {
+      res.status(401).json({ status: "failed" });
+    } else {
+      const post = new postsSchema({
+        text,
+        image,
+        title,
+        author,
+        body,
+        date,
+        section,
       });
+      await post
+        .save()
+        .then((post) => {
+          res.status(200).json([post, { status: "success" }]);
+        })
+        .catch((err) => {
+          console.log(err.message);
+          res.status(403).json({ status: "failed" });
+        });
+    }
+  } catch (error) {
+    console.log(err.message);
+    res.status(404).json({ status: "failed" });
   }
-
   // const post = await new this.Post(req.body);
 
   // res.send(post);
@@ -86,152 +90,40 @@ posts.post("/", async (req, res, next) => {
 
 // edit one post
 posts.put("/:id", async (req, res, next) => {
-  const { text, image, title, author, body, date, section } = req.body;
-  const postId = req.params.id;
-  const token = req.headers.cookie && req.headers.cookie.split("=")[1];
-  let verefiedUser;
-  // console.log(`section : ${section} author : ${author} image : ${image} title : ${title}
-  // body : ${body} text : ${text} `);
-
-  if (!token) {
-    res.status(401).json({ status: "wrong token" });
-  } else {
-    const verified = await jwt.verify(
-      token,
-      process.env.REFRESH_TOKEN_SECRET,
-      (error, user) => {
-        if (error) {
-          res.json({ status: "you don't have access" });
-        }
-        return (verefiedUser = user);
-      },
-    );
-  }
-
-  if (!verefiedUser) {
-    res.status(401).json({ status: "you don't have access" });
-  }
   try {
-    const obj1 = { text, image, title, body, date, section };
-    const obj2 = Object.entries(obj1).filter(([, value]) => value !== "");
-    const obj3 = Object.fromEntries(obj2);
+    const { text, body } = req.body;
+    const postId = req.params.id;
+    const token = req.headers.cookie && req.headers.cookie.split("=")[1];
+    let verefiedUser;
 
-    if (obj3) {
-      const post = await postsSchema.findOneAndUpdate({ _id: postId }, obj3, {
-        new: true,
-      });
-      post.save();
-      res.status(200).json({ status: "success", post });
+    if (!token) {
+      res.status(401).json({ status: "wrong token" });
+    } else {
+      const verified = await jwt.verify(
+        token,
+        process.env.REFRESH_TOKEN_SECRET,
+        (error, user) => {
+          if (error) {
+            res.json({ status: "you don't have access" });
+          }
+          return (verefiedUser = user);
+        },
+      );
+      if (!verefiedUser) {
+        res.status(401).json({ status: "you don't have access" });
+      } else {
+        console.log("go there");
+        const post = await postsSchema.findOneAndUpdate(
+          { _id: postId },
+          { text, body },
+          {
+            new: true,
+          },
+        );
+        post.save();
+        res.status(200).json({ status: "success", post });
+      }
     }
-    // if (image) {
-    //   if (section && !title) {
-    //     const post = await postsSchema.findOneAndUpdate(
-    //       { _id: postId },
-    //       {
-    //         image,
-    //         section,
-    //         body,
-    //         text,
-    //       },
-    //       { new: true }
-    //     );
-    //     post.save();
-    //     res.status(200).json({ status: "success", post });
-    //   } else if (title && !section) {
-    //     const post = await postsSchema.findOneAndUpdate(
-    //       { _id: postId },
-    //       {
-    //         image,
-    //         title,
-    //         body,
-    //         text,
-    //       },
-    //       { new: true }
-    //     );
-    //     post.save();
-    //     res.status(200).json({ status: "success", post });
-    //   } else if (section && title && text) {
-    //     const post = await postsSchema.findOneAndUpdate(
-    //       { _id: postId },
-    //       {
-    //         image,
-    //         section,
-    //         title,
-    //         body,
-    //         text,
-    //       },
-    //       { new: true }
-    //     );
-    //     post.save();
-    //     res.status(200).json({ status: "success", post });
-    //   } else if (!section && !title) {
-    //     const post = await postsSchema.findOneAndUpdate(
-    //       { _id: postId },
-    //       {
-    //         image,
-    //         body,
-    //         text,
-    //       },
-    //       { new: true }
-    //     );
-    //     post.save();
-    //     res.status(200).json({ status: "success", post });
-    //   }
-    // }
-    // // end if there's an image
-    // if (!image) {
-    //   if (title && section) {
-    //     const post = await postsSchema.findOneAndUpdate(
-    //       { _id: postId },
-    //       {
-    //         title,
-    //         section,
-    //         body,
-    //         text,
-    //       },
-    //       { new: true }
-    //     );
-    //     post.save();
-    //     res.status(200).json({ status: "success", post });
-    //   } else if (section && !title) {
-    //     const post = await postsSchema.findOneAndUpdate(
-    //       { _id: postId },
-    //       {
-    //         section,
-    //         body,
-    //         text,
-    //       },
-    //       { new: true }
-    //     );
-    //     post.save();
-    //     res.status(200).json({ status: "success", post });
-    //   } else if (!section && title) {
-    //     const post = await postsSchema.findOneAndUpdate(
-    //       { _id: postId },
-    //       {
-    //         section,
-    //         body,
-    //         text,
-    //       },
-    //       { new: true }
-    //     );
-    //     post.save();
-    //     res.status(200).json({ status: "success", post });
-    //   } else if (section && title && text) {
-    //     const post = await postsSchema.findOneAndUpdate(
-    //       { _id: postId },
-    //       {
-    //         section,
-    //         title,
-    //         body,
-    //         text,
-    //       },
-    //       { new: true }
-    //     );
-    //     post.save();
-    //     res.status(200).json({ status: "success", post });
-    //   }
-    // }
   } catch (error) {
     console.log(error.message);
     res.status(403).json({ status: "failed to update" });
